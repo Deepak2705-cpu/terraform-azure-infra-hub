@@ -68,4 +68,3 @@ module "storage" {
   location            = azurerm_resource_group.main.location
   environment         = var.environment
 }
-
