@@ -1,1 +1,89 @@
+name: Terraform CI/CD
 
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+
+jobs:
+
+  terraform-plan:
+    name: Terraform Format, Validate & Plan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.14.3
+
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Terraform Plan (dev)
+      run: terraform plan -var-file="environments/dev/terraform.tfvars"
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.14.3
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply (dev)
+      run: terraform apply -var-file="environments/dev/terraform.tfvars" -auto-approve
+```
+
+---
+---
+
+# 🧩 REPO 3 — `azure-monitoring-dashboard`
+```
+azure-monitoring-dashboard/
+├── prometheus/
+│   ├── prometheus.yml
+│   └── alerts/
+│       ├── node-alerts.yml
+│       ├── pod-alerts.yml
+│       └── app-alerts.yml
+├── kubernetes/
+│   ├── prometheus-deployment.yaml
+│   └── grafana-deployment.yaml
+├── kql-queries/
+│   ├── error-rate.kql
+│   ├── slow-requests.kql
+│   └── pod-restarts.kql
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+└── README.md
